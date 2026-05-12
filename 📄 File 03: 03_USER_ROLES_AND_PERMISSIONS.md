@@ -1,42 +1,62 @@
-# User Roles and Permissions Matrix - Dental Clinic System
+# 📄 File 03: USER_ROLES_AND_PERMISSIONS
 
 ## 1. Introduction
-This document defines the Access Control Levels (ACL) for the Dental Clinic Appointment Management System. The system uses Role-Based Access Control (RBAC) to ensure data security and operational integrity.
+The Dental Clinic Appointment Management System utilizes a **Role-Based Access Control (RBAC)** model. This ensures data integrity, patient confidentiality (HIPAA-aligned principles), and operational efficiency. While the documentation is in English, the **System Interface (UI) is fully localized in Arabic (RTL)**.
 
-## 2. Role Definitions
-* **Admin:** The system owner with unrestricted access to all modules, including financial data and system configurations.
-* **Doctor:** Medical professional focused on patient treatment, clinical records, and their personal schedule.
-* **Receptionist:** Operational staff responsible for patient flow, front-desk tasks, and billing.
-* **Patient:** External user with limited access to personal records and booking features.
+---
 
-## 3. Permissions Matrix
-| Feature / Module | Admin | Doctor | Receptionist | Patient |
-| :--- | :---: | :---: | :---: | :---: |
-| **Dashboard (Financial Stats)** | Full | No | No | No |
-| **Dashboard (Daily Appointments)** | Full | Personal | Full | No |
-| **User Management (Create/Edit)** | Full | No | No | No |
-| **Patient Registration** | Yes | No | Yes | No |
-| **EHR & Visual Dental Chart** | View | Full | No | View Only |
-| **Medical Prescriptions/Notes** | View | Full | No | View Only |
-| **Manage Appointments (Book/Reschedule)** | Yes | Yes | Yes | Personal |
-| **Cancel Appointments** | Yes | Yes | Yes (Manual) | Personal (24h rule) |
-| **Services & Pricing Setup** | Full | No | No | No |
-| **Invoicing & Payments** | Full | No | Yes | View Own |
-| **Financial Reports (Income/Debt)** | Full | No | No | No |
-| **Inventory & Stock Management** | Full | View | Yes | No |
-| **Feedback Management** | Full | View | No | Create |
+## 2. User Roles Definition
 
-## 4. Specific Access Rules
-### A. Appointment Cancellation
-* **Automated (Patient):** Allowed if `CurrentDateTime` < `AppointmentDateTime - 24 Hours`.
-* **Manual (Receptionist/Admin):** Can override the 24-hour rule to cancel at any time.
+| Role | Description | Access Level |
+| :--- | :--- | :--- |
+| **System Admin** | The business owner/manager. Oversees finances and staff. | Full System Access |
+| **Senior Doctor** | Head of medical staff. Can oversee all clinical records. | Full Clinical Access |
+| **Doctor** | General practitioners. Manage assigned patients and charts. | Standard Clinical Access |
+| **Receptionist** | Front-desk operations, scheduling, and billing. | Operational Access |
+| **Patient** | End-user. Manages personal bookings and history. | Self-Service Access |
 
-### B. Medical Data Privacy
-* **Receptionists** can view patient contact information but are strictly blocked from accessing the **Visual Dental Chart** or **Medical History**.
-* **Doctors** cannot see the **Total Clinic Revenue** or other doctors' productivity reports.
+---
 
-### C. Inventory Alerts
-* Both **Admin** and **Receptionist** receive notifications when stock levels fall below the defined threshold.
+## 3. Advanced Feature Additions (E-Business Focused)
 
-## 5. UI Customization (Arabic Interface)
-* The Sidebar/Navigation menu will dynamically show/hide links based on the logged-in user's role to maintain a clean Arabic UI experience.
+### A. Audit Trail (Activity Logs)
+*   **Traceability:** Every "Create", "Update", or "Delete" action is logged with a timestamp and User ID.
+*   **Accountability:** Admins can track who changed a service price, who cancelled a payment, or who modified a medical record.
+
+### B. Two-Factor Authentication (2FA)
+*   **Security:** Mandatory for **Admin** and **Senior Doctor** roles due to the sensitivity of financial and medical data.
+*   **Implementation:** Secure login via email or SMS verification codes.
+
+### C. Password Recovery Policy
+*   **Self-Service:** Patients can reset passwords via registered email.
+*   **Assisted:** Receptionists can trigger a "Password Reset Link" for patients in-person.
+*   **Staff:** Only the Admin can reset passwords for Doctors and Receptionists.
+
+---
+
+## 4. Detailed Permissions Matrix (CRUD)
+*(C: Create, R: Read, U: Update, D: Delete)*
+
+| Feature / Module | Admin | Senior Doctor | Doctor | Receptionist | Patient |
+| :--- | :---: | :---: | :---: | :---: | :---: |
+| **Staff Accounts** | CRUD | R | - | - | - |
+| **Clinical Records (EHR)** | R | CRUD | CRU* | R (Status Only) | - |
+| **Visual Dental Chart** | R | CRUD | CRU* | - | - |
+| **Appointment Engine** | CRUD | R | RU | CRUD | CRU (Self) |
+| **Financial Reports** | CRUD | R | - | - | - |
+| **Invoicing & Payments** | CRUD | R | - | CRU | R (Self) |
+| **Inventory & Alerts** | CRUD | R | R | RU | - |
+| **Patient Feedback** | R | R | - | - | CRU |
+| **Audit Logs** | R | - | - | - | - |
+
+*\*Doctors can only update records of patients assigned to them.*
+
+---
+
+## 5. Specific Business Rules & Security
+
+1.  **UI Localization:** All roles will interact with an **Arabic RTL Interface**, ensuring zero language barriers for local staff and patients.
+2.  **Medical Privacy:** Receptionists can see *that* a patient has an appointment, but cannot view the specific *medical diagnosis* or *dental chart* details.
+3.  **Financial Integrity:** Once an invoice is "Paid," it cannot be deleted. It can only be "Refunded" by an Admin, which triggers an Audit Log entry.
+4.  **Appointment Conflict Prevention:** The system logic blocks the database from saving two overlapping appointments for the same Doctor ID.
+5.  **Session Security:** Automatic logout after 30 minutes of inactivity to protect sensitive data on shared clinic computers.
